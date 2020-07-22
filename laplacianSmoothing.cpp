@@ -34,10 +34,10 @@
 #include <maya/MPointArray.h>
 #include <maya/MMatrix.h>
 
-#define McheckErr(stat, msg)		\
+#define McheckErr(stat, msg)			\
 		if ( MS::kSuccess != stat )	\
-		{							\
-			cerr << msg;			\
+		{				\
+			cerr << msg;		\
 			return MS::kFailure;	\
 		}
 
@@ -50,13 +50,13 @@ public:
 	laplacianSmoothing();
 	~laplacianSmoothing() override;
 
-	static void		*creator();
+	static void	*creator();
 	static MStatus	initialize();
 
-    MStatus deform (MDataBlock		&block,
-					MItGeometry 	&iter,
-					const MMatrix 	&mat,
-					unsigned int 	multiIndex) override;
+    	MStatus deform 	(MDataBlock	&block,
+			 MItGeometry 	&iter,
+			 const MMatrix 	&mat,
+			 unsigned int 	multiIndex) override;
 
 public:
 
@@ -96,26 +96,26 @@ MStatus laplacianSmoothing::initialize()
 {
 	// local attribute initialization
 	MFnEnumAttribute eAttr;
-	op =	eAttr.create("operation", "op");
-			eAttr.addField("Laplace", 0);
-			eAttr.addField("Taubin", 1);
-			eAttr.setKeyable(true);
+	op = 	eAttr.create("operation", "op");
+		eAttr.addField("Laplace", 0);
+		eAttr.addField("Taubin", 1);
+		eAttr.setKeyable(true);
 
 	MFnNumericAttribute nAttr;
 	it =	nAttr.create("iterations", "it", MFnNumericData::kInt);
-			nAttr.setDefault(0);
-			nAttr.setMin(0);
-			nAttr.setKeyable(true);
+		nAttr.setDefault(0);
+		nAttr.setMin(0);
+		nAttr.setKeyable(true);
 	coef =	nAttr.create("coefficient", "coef", MFnNumericData::kDouble);
-			nAttr.setDefault(0.33);
-			nAttr.setMin(0.0);
-			nAttr.setMax(1.0);
-			nAttr.setKeyable(true);
+		nAttr.setDefault(0.33);
+		nAttr.setMin(0.0);
+		nAttr.setMax(1.0);
+		nAttr.setKeyable(true);
 	coef_taub = nAttr.create("Taubin coefficient", "Tcoef", MFnNumericData::kDouble);
-			nAttr.setDefault(-0.34);
-			nAttr.setMin(-1.0);
-			nAttr.setMax(0.0);
-			nAttr.setKeyable(true);
+		nAttr.setDefault(-0.34);
+		nAttr.setMin(-1.0);
+		nAttr.setMax(0.0);
+		nAttr.setKeyable(true);
 
 	addAttribute(op);
 	addAttribute(it);
@@ -124,37 +124,37 @@ MStatus laplacianSmoothing::initialize()
 
 	// affects
 	attributeAffects(laplacianSmoothing::op, laplacianSmoothing::outputGeom);
-    attributeAffects(laplacianSmoothing::it, laplacianSmoothing::outputGeom);
+    	attributeAffects(laplacianSmoothing::it, laplacianSmoothing::outputGeom);
 	attributeAffects(laplacianSmoothing::coef, laplacianSmoothing::outputGeom);
 	attributeAffects(laplacianSmoothing::coef_taub, laplacianSmoothing::outputGeom);
 
 	return MS::kSuccess;
 }
 
-MStatus laplacianSmoothing::deform (MDataBlock		&block,
-									MItGeometry		&iter,
-									const MMatrix	&/*mat*/,
-									unsigned int	multiIndex)
+MStatus laplacianSmoothing::deform 	(MDataBlock	&block,
+					 MItGeometry	&iter,
+					 const MMatrix	&/*mat*/,
+					 unsigned int	multiIndex)
 // Description:   Deform the point with a laplacianSmoothing algorithm
 //
 // Arguments:
-//   block		: the datablock of the node
-//	 iter		: an iterator for the geometry to be deformed
-//   m    		: matrix to transform the point into world space
-//	 multiIndex : the index of the geometry that we are deforming
+//	block		: the datablock of the node
+//	iter		: an iterator for the geometry to be deformed
+//	m    		: matrix to transform the point into world space
+//	multiIndex 	: the index of the geometry that we are deforming
 {
 	MStatus status = MS::kSuccess;
 	
-	// Тип операции (Лаплас, Таубин)
+	// Operation type (Laplace, Taubin)
 	int opData = block.inputValue(op, &status).asShort();
 	McheckErr(status, "Error getting operation data handle\n");
-	// Кол-во итераций
+	// Number of iterations
 	int iterData = block.inputValue(it, &status).asInt();
 	McheckErr(status, "Error getting iterations data handle\n");
-	// Коэффициент альфа
+	// Alpha coefficient
 	double coefData = block.inputValue(coef, &status).asDouble();
 	McheckErr(status, "Error getting coefficient data handle\n");
-	// Коэффициент для сглаживания Таубина - мю
+	// Coefficient for Taubin smoothing - mu
 	double coefTaubData = block.inputValue(coef_taub, &status).asDouble();
 	McheckErr(status, "Error getting Taubin coefficient data handle\n");
 	float env = block.inputValue(envelope, &status).asFloat();
@@ -179,26 +179,24 @@ MStatus laplacianSmoothing::deform (MDataBlock		&block,
 	}
 
 	// iterate through each point in the geometry
-	//
 	for (unsigned int m = 0; m < iterData * env; m++)
 	{
 		for (iter.reset(), vertexIt.reset(), j = 0; !iter.isDone(); iter.next(), vertexIt.next(), j++)
 		{
 			vertexIt.setIndex(iter.index(), index);
 
-			// Закрепление границы
 			if (vertexIt.onBoundary())
 				continue;
 
-			// Индексы соседних вершин
+			// Neighboring vertex indices
 			vertexIt.getConnectedVertices(connected);
 			MPoint pt = oldPts[iter.index()], tmp = L(connected, oldPts, pt), delta(0.0, 0.0);
 
-			// Расчёт новой позиции
+			// Calculation of a new position
 			if (tmp == delta) continue;
 			pt = pt + coefData * tmp;
 
-			// Доп. итерация для сглаживания Таубина
+			// Add. iteration for Taubin smoothing
 			if (opData == 1)
 			{
 				tmp = L(connected, oldPts, pt);
@@ -218,7 +216,7 @@ MStatus laplacianSmoothing::deform (MDataBlock		&block,
 	return status;
 }
 
-// Расчёт оператора Лапласа
+// Calculation of the Laplace operator
 MPoint L(const MIntArray &connected, std::map <int, MPoint> &oldPts, const MPoint &pt)
 {
 	MPoint L(0.0, 0.0), delta(0.0, 0.0);
@@ -250,7 +248,7 @@ MPoint L(const MIntArray &connected, std::map <int, MPoint> &oldPts, const MPoin
 	return L;
 }
 
-// Расчёт cotangent weights
+// Calculation of cotangent weights
 double getWeight(const MPoint &i, const MPoint &j, const MPoint &p1, const MPoint &p2)
 {
 	double a_ij, b_ip1, c_jp1, d_ip2, e_jp2;
@@ -278,7 +276,7 @@ MStatus initializePlugin(MObject obj)
 	MStatus result;
 	MFnPlugin plugin(obj, PLUGIN_COMPANY, "1.0", "Any");
 	result = plugin.registerNode(laplacianSmoothing::name, laplacianSmoothing::id, laplacianSmoothing::creator,
-								 laplacianSmoothing::initialize, MPxNode::kDeformerNode);
+				     laplacianSmoothing::initialize, MPxNode::kDeformerNode);
 	return result;
 }
 
