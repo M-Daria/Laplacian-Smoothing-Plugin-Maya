@@ -188,7 +188,7 @@ MStatus laplacianSmoothing::deform 	(MDataBlock	&block,
 			if (vertexIt.onBoundary())
 				continue;
 
-			// Neighboring vertex indices
+			// nearby vertex indices
 			vertexIt.getConnectedVertices(connected);
 			MPoint pt = oldPts[iter.index()], tmp = L(connected, oldPts, pt), delta(0.0, 0.0);
 
@@ -225,7 +225,7 @@ MPoint L(const MIntArray &connected, std::map <int, MPoint> &oldPts, const MPoin
 
 	for (i = 0, w = 0; i < connected.length(); i++, w += w_ij)
 	{
-		// Если соседняя вершина не принадлежит выделенной области
+		// If the nearby vertex doesn't belong to the selection
 		if (oldPts.find(connected[i]) == oldPts.end()) break;
 
 		int next = (i == connected.length() - 1) ? 0 : i + 1;
