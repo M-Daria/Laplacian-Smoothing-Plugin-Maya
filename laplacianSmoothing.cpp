@@ -111,7 +111,7 @@ MStatus laplacianSmoothing::initialize()
 		nAttr.setMin(0.0);
 		nAttr.setMax(1.0);
 		nAttr.setKeyable(true);
-	coef_taub = nAttr.create("Taubin coefficient", "Tcoef", MFnNumericData::kDouble);
+	coef_taub = nAttr.create("Taubin_coefficient", "Tcoef", MFnNumericData::kDouble);
 		nAttr.setDefault(-0.34);
 		nAttr.setMin(-1.0);
 		nAttr.setMax(0.0);
