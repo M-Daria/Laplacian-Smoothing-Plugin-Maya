@@ -6,18 +6,20 @@ What things you need to install the plug-in:
 * Autodesk Maya
 * Maya Developer Toolkit
 
-All the installation instructions are available on the [link](https://help.autodesk.com/view/MAYAUL/2020/ENU/?guid=Maya_SDK_MERGED_Setting_up_your_build_Windows_environment_64_bit_html).
+All the installation instructions are available on the [link](https://help.autodesk.com/view/MAYAUL/2020/ENU/?guid=Maya_SDK_MERGED_Setting_up_your_build_Windows_environment_64_bit_html). Before starting, you need also add the <b>DEVKIT_LOCATION</b> environment variable that points to your Maya devkit installation directory:
+
+    set DEVKIT_LOCATION=C:\Users\<Username>\devkitBase\
 ### Running
 Use CMake and the appropriate generator to build a project for your code:
 1. When building on Windows
 
-        cmake -H. -Bbuild -G "Visual Studio 16 2019"
+        cmake -S. -Bbuild -G "Visual Studio 16 2019"
 2. When building using Xcode on MacOS
 
-        cmake -H. -Bbuild -G Xcode
+        cmake -S. -Bbuild -G Xcode
 3. When building using a makefile on Linux or MacOS
 
-        cmake -H. -Bbuild -G "Unix Makefiles"
+        cmake -S. -Bbuild -G "Unix Makefiles"
 Once you have built your project successfully, use CMake again to build your plug-in:
 
     cmake --build build
